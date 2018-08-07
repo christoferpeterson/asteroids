@@ -16,13 +16,13 @@
             const SHIP_THRUST = 5; // acceleration of ship in pixels per second per second
             const FRICTION = .7 // friction coefficient of space (0 = no friction, 1 = lots of friction)
             const ROIDS_NUM = 10; // starting number of asteroids
-            const ROIDS_JAG = .35; // jaggedness of the asteroids (0 = none, 1 = lots)
+            const ROIDS_JAG = .25; // jaggedness of the asteroids (0 = none, 1 = lots)
             const ROIDS_SIZE = 100; // starting size of asteroids in pixels
             const ROIDS_SPD = 50; // max starting speed of asteroids in pixels per second
-            const ROIDS_VERT = 10; // average number of vertices on each asteroid
+            const ROIDS_VERT = 12; // average number of vertices on each asteroid
             const SHOW_BOUNDING = false; // show or hide collision boundaries
             const SHOW_CENTER_DOT = false; // show or hide ship's center dot
-            const SHIP_EXPLODE_DUR = 0.3; // duration of the ship's explosion
+            const SHIP_EXPLODE_DUR = .3; // duration of the ship's explosion
             const SHIP_INV_DUR = 3; // ship's invulnerability duration in seconds
             const SHIP_BLINK_DUR = .1 // duration of ship's blink during invulnerability in seconds
 
@@ -192,7 +192,7 @@
                     ship.y += ship.thrust.y;
                 } else {
                     ship.explodeTime--;
-                    if(ship.explodeTime >= 0) {
+                    if(ship.explodeTime <= 0) {
                         ship = newShip();
                     }
                 }
