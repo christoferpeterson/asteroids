@@ -1,31 +1,30 @@
-import {gameMath} from '../libs';
-import CONST from '../constants';
+import GameElement from './GameElement';
 
-class Ship {
+class Ship extends GameElement {
 	constructor(params) {
+		super();
 		this.xPosition = params.x;
 		this.yPosition = params.y;
 		this.shipSize = params.shipSize;
 		this.radius = this.shipSize / 2;
 		this.angle = params.angle;
-		this.rotationSpeed = params.rotationSpeed;
-		this.thrusting = false;
-		this.thrust = { x: 0, y: 0 };
-		this.explodeTime = 0;
-		this.blinkTime = Math.ceil(CONST.SHIP_BLINK_DUR * CONST.FPS);
-		this.blinkNum = Math.ceil(CONST.SHIP_INV_DUR / CONST.SHIP_BLINK_DUR);
-		this.canShoot = true;
-		this.lasers = [];
-		this.dead = false;
 		this.color = "white";
 	}
 
+	keyDown	(/** @type {KeyboardEvent} */ ev) {
+		super.keyDown(ev);
+	}
+
+	keyUp(/** @type {KeyboardEvent} */ ev) {
+		super.keyUp(ev);
+	}
+
 	update() {
-		// rotate ship
-		this.angle += this.rotationSpeed;
+		super.update();
 	}
 
 	draw(canvas) {
+		super.draw(canvas);
 		canvas.drawIsoscelesTriangle(this.xPosition, this.yPosition, this.radius, this.angle, this.color, this.shipSize * .05);
 	}
 }

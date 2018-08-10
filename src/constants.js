@@ -3,7 +3,7 @@ export default {
 	SCREEN_WIDTH: 640, // screen height in pixels
 	SCREEN_HEIGHT: 480, // screen height in pixels
 	SHIP_SIZE: 30, // ship radius in pixels
-	TURN_SPEED: 360, // ship turn speed in degrees per second
+	TURN_SPEED: Math.PI * 3 / 2, // ship turn speed in degrees per second
 	SHIP_THRUST: 5, // acceleration of ship in pixels per second per second
 	FRICTION: .7, // friction coefficient of space (0 = no friction, 1 = lots of friction)
 	ROIDS_NUM: 3, // starting number of asteroids
@@ -11,8 +11,8 @@ export default {
 	ROIDS_SIZE: 100, // starting size of asteroids in pixels
 	ROIDS_SPD: 50, // max starting speed of asteroids in pixels per second
 	ROIDS_VERT: 12, // average number of vertices on each asteroid
-	SHOW_BOUNDING: false, // show or hide collision boundaries
-	SHOW_CENTER_DOT: false, // show or hide ship's center dot
+	SHOW_BOUNDING: true, // show or hide collision boundaries
+	SHOW_CENTER_DOT: true, // show or hide ship's center dot
 	SHIP_EXPLODE_DUR: .3, // duration of the ship's explosion
 	SHIP_INV_DUR: 3, // ship's invulnerability duration in seconds
 	SHIP_BLINK_DUR: .1, // duration of ship's blink during invulnerability in seconds

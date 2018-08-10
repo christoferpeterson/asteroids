@@ -32,6 +32,15 @@ class Canvas {
 			this.ctx.fill();
 		}
 	}
+
+	drawCircle(x, y, radius, strokeColor, fillColor) {
+		if(!!strokeColor) this.ctx.strokeStyle = strokeColor;
+		if(!!fillColor) this.ctx.fillStyle = fillColor;
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+		if(!!strokeColor) this.ctx.stroke();
+		if(!!fillColor) this.ctx.fill();
+	}
 }
 
 export default Canvas;

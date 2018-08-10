@@ -1,6 +1,6 @@
 import CONST from './constants';
 import { Canvas, gameMath } from './libs';
-import { Ship } from './gameElements';
+import { Background, Ship, Sound, UserShip } from './gameElements';
 
 export default function() {
 	function component() {
@@ -18,12 +18,12 @@ export default function() {
 	const canvas = new Canvas(ctx);
 		
 	let level, roids, ship, text, textAlpha, lives, score, scoreHigh;
+	let gameElements = [];
 
 	// set up sound effects 
 	const fxLaser = new Sound("laser.m4a", 5, .5);
 	const fxExplode = new Sound("explode.m4a");
 	const fxHit = new Sound("hit.m4a", 5);
-	const fxThrust = new Sound("thrust.m4a");
 
 	// set up music
 	const music = new Music("music-low.m4a", "music-high.m4a");
@@ -37,14 +37,24 @@ export default function() {
 	document.addEventListener("keyup", keyUp);
 
 	// game loop
-	setInterval(update, 1000 / CONST.FPS);
+	setInterval(gameLoop, 1000 / CONST.FPS);
 
 	function newGame() {
 		level = 0;
 		score = 0;
 		lives = CONST.GAME_LIVES;
+
+		gameElements = [];
+		gameElements.push(new Background());
+
 		// draw triangluar ship
-		ship = newShip();
+		ship = new UserShip({
+			x: canv.width / 2,
+			y: canv.height / 2,
+			shipSize: CONST.SHIP_SIZE,
+			angle: Math.PI / 2,
+			shootLaser
+		});
 		
 		// get the high score from local storage
 		var scoreStr = localStorage.getItem(CONST.SAVE_KEY_SCORE);
@@ -73,7 +83,7 @@ export default function() {
 			do {
 				x = Math.floor(Math.random() * canv.width);
 				y = Math.floor(Math.random() * canv.height);
-			} while (distBetweenPoints(ship.xPosition, ship.yPosition, x, y) < CONST.ROIDS_SIZE * 2 + ship.radius);
+			} while (gameMath.distBetweenPoints(ship.xPosition, ship.yPosition, x, y) < CONST.ROIDS_SIZE * 2 + ship.radius);
 			roids.push(newAsteroid(x, y, Math.ceil(CONST.ROIDS_SIZE / 2)));
 		}
 		roidsTotal = roids.length * 7;
@@ -81,6 +91,7 @@ export default function() {
 	}
 
 	function explodeShip() {
+		ship.dead = true;
 		ship.explodeTime = Math.ceil(CONST.SHIP_EXPLODE_DUR * CONST.FPS);
 		fxExplode.play();
 	}
@@ -93,55 +104,11 @@ export default function() {
 	}
 
 	function keyDown(/** @type {KeyboardEvent} */ ev) {
-		if(ship.dead) {
-			return;
-		}
-
-		switch(ev.keyCode) {
-			case 37: // left arrow (rotate ship left)
-				ship.rotationSpeed = gameMath.toRadians(CONST.TURN_SPEED) / CONST.FPS;
-				break;
-			case 38: // up arrow (thrust ship forward)
-				ship.thrusting = true;
-				break;
-			case 39: // right arrow (rotate ship right)
-				ship.rotationSpeed = gameMath.toRadians(-CONST.TURN_SPEED) / CONST.FPS;
-				break;                    
-			case 32: // space bar (shoot laswer)
-				shootLaser();
-				break;
-		}
+		ship.keyDown(ev);
 	}
 
 	function keyUp(/** @type {KeyboardEvent} */ ev) {
-		if(ship.dead) {
-			return;
-		}
-		
-		switch(ev.keyCode) {
-			case 37: // left arrow (stop rotate ship left)
-				ship.rotationSpeed = 0;
-				break;
-			case 38: // up arrow (stop thrust ship forward)
-				ship.thrusting = false;
-				break;
-			case 39: // right arrow (stop rotate ship right)
-				ship.rotationSpeed = 0;
-				break;                    
-			case 32: // space bar (shoot laswer)
-				ship.canShoot = true;
-				break;
-		}
-	}
-
-	function newShip() {
-		return new Ship({
-			x: canv.width / 2,
-			y: canv.height / 2,
-			shipSize: CONST.SHIP_SIZE,
-			angle: gameMath.toRadians(90),
-			rotationSpeed: 0
-		});
+		ship.keyUp(ev);
 	}
 
 	function shootLaser() {
@@ -150,8 +117,8 @@ export default function() {
 			ship.lasers.push({ // from nose of ship
 				x: ship.xPosition + 4 / 3 * ship.radius * Math.cos(ship.angle),
 				y: ship.yPosition - 4 / 3 * ship.radius * Math.sin(ship.angle),
-				xv: CONST.LASER_SPD * Math.cos(ship.angle) / CONST.FPS,
-				yv: -CONST.LASER_SPD * Math.sin(ship.angle) / CONST.FPS,
+				xv: (CONST.LASER_SPD * Math.cos(ship.angle) / CONST.FPS) + ship.thrust.x,
+				yv: (-CONST.LASER_SPD * Math.sin(ship.angle) / CONST.FPS) + ship.thrust.y,
 				dist: 0,
 				explodeTime: 0
 			});
@@ -222,32 +189,6 @@ export default function() {
 		}
 	}
 
-	function distBetweenPoints(x1, y1, x2, y2) {
-		return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-	}
-
-	function Sound(src, maxStreams = 1, vol = 1) {
-		this.streamNum = 0;
-		this.streams = [];
-		for (let i = 0; this.streams.length < maxStreams; i++) {
-			this.streams.push(new Audio(`${CONST.SOUND_DIR}/${src}`));
-			this.streams[i].volume = vol;                    
-		}
-
-		this.play = function() {
-			if(!CONST.SOUND_ON) {
-				return;
-			}
-			this.streamNum = (this.streamNum + 1) % maxStreams;
-			this.streams[this.streamNum].play();
-		}
-
-		this.stop = function() {
-			this.streams[this.streamNum].pause();
-			this.streams[this.streamNum].currentTime = 0;
-		}
-	}
-
 	function Music(srcLow, srcHigh) {
 		this.soundLow = new Audio(`${CONST.SOUND_DIR}/${srcLow}`);
 		this.soundHigh = new Audio(`${CONST.SOUND_DIR}/${srcHigh}`);
@@ -283,42 +224,39 @@ export default function() {
 	}
 
 	function update() {
-		var blinkOn = ship.blinkNum % 2 == 0;
+		for (let i = gameElements.length - 1; i >= 0; i--) {
+			if(typeof gameElements[i].update === 'function') {
+				gameElements[i].update();
+			}
+		}
+	}
+
+	function draw(canvas) {
+		canvas.ctx.clearRect(0, 0, CONST.SCREEN_WIDTH, CONST.SCREEN_HEIGHT);
+		for (let i = gameElements.length - 1; i >= 0; i--) {
+			if(typeof gameElements[i].draw === 'function') {
+				gameElements[i].draw(canvas);
+			}
+		}
+	}
+
+	function clean() {
+		for (let i = gameElements.length - 1; i >= 0; i--) {
+			if(!!gameElements[i].deleted) {
+				gameElements[i].splice(i, 1);
+			}
+		}
+	}
+
+	function gameLoop() {
+		update();
+		draw(canvas);
+		clean();
+
 		var exploding = ship.explodeTime > 0;
 
 		music.tick();
-
-		// draw background (space)
-		canvas.ctx.fillStyle = "black";
-		canvas.ctx.fillRect(0, 0, canv.width, canv.height);
-
-		if(ship.thrusting && !ship.dead) {
-			fxThrust.play();
-			ship.thrust.x += CONST.SHIP_THRUST * Math.cos(ship.angle) / CONST.FPS;
-			ship.thrust.y -= CONST.SHIP_THRUST * Math.sin(ship.angle) / CONST.FPS;
-		} else {
-			fxThrust.stop();
-			ship.thrust.x -= CONST.FRICTION * ship.thrust.x / CONST.FPS;
-			ship.thrust.y -= CONST.FRICTION * ship.thrust.y / CONST.FPS;
-		}
-
-		if(exploding) {
-			drawExplosion();
-		} else if(!ship.dead) {
-			if(blinkOn) {
-				drawPlayerShip();
-			}
-			if(ship.blinkNum > 0) {
-				// reduce blink time
-				ship.blinkTime--;
-
-				// reduce the blink num
-				if(ship.blinkTime == 0) {
-					ship.blinkTime = Math.ceil(CONST.SHIP_BLINK_DUR * CONST.FPS);
-					ship.blinkNum--;
-				}
-			}
-		}
+		drawPlayerShip();
 		
 		for (let i = 0; i < ship.lasers.length; i++) {
 			drawLaser(ship.lasers[i])
@@ -336,7 +274,7 @@ export default function() {
 			canvas.ctx.font = `small-caps ${CONST.TEXT_SIZE}px mono`;
 			canvas.ctx.fillText(text, canv.width / 2, canv.height * .75);
 			textAlpha -= (1.0 / CONST.TEXT_FADE_TIME / CONST.FPS);
-		} else if(ship.dead) {
+		} else if(lives == 0 && ship.dead) {
 			newGame();
 		}
 
@@ -373,7 +311,7 @@ export default function() {
 				ly = ship.lasers[j].y;
 
 				// detect hits
-				if(ship.lasers[j].explodeTime == 0 && distBetweenPoints(ax, ay, lx, ly) < ar) {
+				if(ship.lasers[j].explodeTime == 0 && gameMath.distBetweenPoints(ax, ay, lx, ly) < ar) {
 					destroyAsteroid(i);
 
 					// explode laser
@@ -387,7 +325,7 @@ export default function() {
 			if(ship.blinkNum == 0 && !ship.dead) {
 				// check for asteroid collisions
 				for (let i = 0; i < roids.length; i++) {
-					if(distBetweenPoints(ship.xPosition, ship.yPosition, roids[i].x, roids[i].y) < ship.radius + roids[i].r) {
+					if(gameMath.distBetweenPoints(ship.xPosition, ship.yPosition, roids[i].x, roids[i].y) < ship.radius + roids[i].r) {
 						explodeShip();
 						destroyAsteroid(i);
 						break;
@@ -396,10 +334,6 @@ export default function() {
 			}
 
 			ship.update();
-
-			// move ship
-			ship.xPosition += ship.thrust.x;
-			ship.yPosition += ship.thrust.y;
 		} else {
 			ship.explodeTime--;
 			if(ship.explodeTime <= 0) {
@@ -407,23 +341,15 @@ export default function() {
 				if(lives == 0) {
 					gameOver();
 				} else {
-					ship = newShip();
+					ship = new UserShip({
+						x: canv.width / 2,
+						y: canv.height / 2,
+						shipSize: CONST.SHIP_SIZE,
+						angle: Math.PI / 2,
+						shootLaser
+					});
 				}
 			}
-		}
-
-		// handle edge of screen
-		if(ship.xPosition < 0 - ship.radius) {
-			ship.xPosition = canv.width + ship.radius;
-		} else if(ship.xPosition > canv.width + ship.radius) {
-			ship.xPosition = 0 - ship.radius;
-		}
-		
-		// handle edge of screen
-		if(ship.yPosition < 0 - ship.radius) {
-			ship.yPosition = canv.height + ship.radius;
-		} else if(ship.yPosition > canv.height + ship.radius) {
-			ship.yPosition = 0 - ship.radius;
 		}
 
 		// move lasers
@@ -484,14 +410,6 @@ export default function() {
 		}
 	}
 
-	function drawExplosion() {
-		drawCircle(ship.xPosition, ship.yPosition, ship.radius * 1.7, "", "darkred");
-		drawCircle(ship.xPosition, ship.yPosition, ship.radius * 1.4, "", "red");
-		drawCircle(ship.xPosition, ship.yPosition, ship.radius * 1.1, "", "orange");
-		drawCircle(ship.xPosition, ship.yPosition, ship.radius * .8, "", "yellow");
-		drawCircle(ship.xPosition, ship.yPosition, ship.radius * .5, "", "white");
-	}
-
 	function drawShip(x, y, a, color = "white") {
 		// draw ship
 		canvas.ctx.strokeStyle = color;
@@ -514,44 +432,8 @@ export default function() {
 		canvas.ctx.stroke();
 	}
 
-	function drawThrust(x, y, a) {
-		// draw thruster
-		canvas.ctx.strokeStyle = "pink";
-		canvas.ctx.fillStyle = "blue";
-		canvas.ctx.lineWidth = CONST.SHIP_SIZE * .1;
-		canvas.ctx.beginPath();
-		canvas.ctx.moveTo( // rear left
-			x - ship.radius * (2 / 3 * Math.cos(a) + .5 * Math.sin(a)),
-			y + ship.radius * (2 / 3 * Math.sin(a) - .5 * Math.cos(a))
-		);
-		canvas.ctx.lineTo( // rear center (behind ship)
-			x - ship.radius * 6 / 3 * Math.cos(a),
-			y + ship.radius * 6 / 3 * Math.sin(a)
-		);
-
-		canvas.ctx.lineTo( /// rear left
-			x - ship.radius * (2 / 3 * Math.cos(a) - .5 * Math.sin(a)),
-			y + ship.radius * (2 / 3 * Math.sin(a) + .5 * Math.cos(a))
-		);
-		canvas.ctx.closePath();
-		canvas.ctx.fill();
-		canvas.ctx.stroke();
-	}
-
 	function drawPlayerShip() {            
 		ship.draw(canvas);
-		if(ship.thrusting) {
-			drawThrust(ship.xPosition, ship.yPosition, ship.angle);
-		}
-
-		if(CONST.SHOW_CENTER_DOT) {
-			canvas.ctx.fillStyle = "red";
-			canvas.ctx.fillRect(x - 1, y - 1, 2, 2);
-		}
-
-		if(CONST.SHOW_BOUNDING) {
-			drawCircle(x, y, ship.radius, "lime", "");
-		}
 	}
 
 	function drawAsteroid(asteroid) {
@@ -584,28 +466,19 @@ export default function() {
 			canvas.ctx.stroke();
 
 			if(CONST.SHOW_BOUNDING) {
-				drawCircle(x, y, r, "lime", "");
+				canvas.drawCircle(x, y, r, "lime", "");
 			}
 
 	}
 
-	function drawCircle(x, y, radius, strokeColor, fillColor) {
-		if(!!strokeColor) canvas.ctx.strokeStyle = strokeColor;
-		if(!!fillColor) canvas.ctx.fillStyle = fillColor;
-		canvas.ctx.beginPath();
-		canvas.ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-		if(!!strokeColor) canvas.ctx.stroke();
-		if(!!fillColor) canvas.ctx.fill();
-	}
-
 	function drawLaser(laser) {
 		if(laser.explodeTime == 0) {
-			drawCircle(laser.x, laser.y, CONST.SHIP_SIZE / 15, "", "salmon");
+			canvas.drawCircle(laser.x, laser.y, CONST.SHIP_SIZE / 15, "", "salmon");
 		} else {
 			// draw explosion
-			drawCircle(laser.x, laser.y, ship.radius * .75, "", "orangered");
-			drawCircle(laser.x, laser.y, ship.radius * .5, "", "salmon");
-			drawCircle(laser.x, laser.y, ship.radius * .25, "", "pink");
+			canvas.drawCircle(laser.x, laser.y, ship.radius * .75, "", "orangered");
+			canvas.drawCircle(laser.x, laser.y, ship.radius * .5, "", "salmon");
+			canvas.drawCircle(laser.x, laser.y, ship.radius * .25, "", "pink");
 		}
 	}
 }
