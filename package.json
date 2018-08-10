@@ -1,0 +1,25 @@
+{
+  "name": "asteroids",
+  "version": "1.0.0",
+  "description": "Asteroid game started with [tutorial](https://www.youtube.com/watch?v=H9CSWMxJx84) from [freeCodeCamp on youtube](https://www.youtube.com/channel/UC8butISFwT-Wl7EV0hUK0BQ).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christoferpeterson/asteroids.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/christoferpeterson/asteroids/issues"
+  },
+  "homepage": "https://github.com/christoferpeterson/asteroids#readme",
+  "devDependencies": {
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.1.0"
+  }
+}
