@@ -1,6 +1,5 @@
-import Background from './Background';
-import Ship from './Ship';
-import Sound from './Sound';
-import UserShip from './UserShip';
-
-export { Background, Ship, Sound, UserShip };
+export { default as Background } from "./Background";
+export { default as Music } from "./Music";
+export { default as Ship } from "./Ship";
+export { default as Sound } from "./Sound";
+export { default as UserShip } from "./UserShip";

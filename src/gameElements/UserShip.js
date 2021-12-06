@@ -1,6 +1,9 @@
 import Ship from './Ship';
 import Sound from './Sound';
 import CONST from '../constants';
+import Laser from './Laser';
+
+const fxLaser = new Sound("laser.m4a", 5, .5);
 
 class UserShip extends Ship {
 	constructor(params) {
@@ -15,7 +18,6 @@ class UserShip extends Ship {
 		this.canShoot = true;
 		this.lasers = [];
 		this.dead = false;
-		this.shootLaser = params.shootLaser;
 
 		this.fxThrust = new Sound("thrust.m4a");
 	}
@@ -27,17 +29,18 @@ class UserShip extends Ship {
 			return;
 		}
 
-		switch(ev.keyCode) {
-			case 37: // left arrow (rotate ship left)
+		switch(ev.key) {
+			case "ArrowLeft": // left arrow (rotate ship left)
 				this.rotationSpeed = CONST.TURN_SPEED / CONST.FPS;
 				break;
-			case 38: // up arrow (thrust ship forward)
+			case "ArrowUp": // up arrow (thrust ship forward)
 				this.thrusting = true;
 				break;
-			case 39: // right arrow (rotate ship right)
+			case "ArrowRight": // right arrow (rotate ship right)
 				this.rotationSpeed = -CONST.TURN_SPEED / CONST.FPS;
 				break;
-			case 32: // space bar (shoot laswer)
+			case "Spacebar":
+			case " ": // space bar (shoot laser)
 				this.shootLaser();
 				break;
 		}
@@ -50,20 +53,39 @@ class UserShip extends Ship {
 			return;
 		}
 
-		switch(ev.keyCode) {
-			case 37: // left arrow (stop rotate ship left)
+		switch(ev.key) {
+			case "ArrowLeft": // left arrow (stop rotate ship left)
 				this.rotationSpeed = 0;
 				break;
-			case 38: // up arrow (stop thrust ship forward)
+			case "ArrowUp": // up arrow (stop thrust ship forward)
 				this.thrusting = false;
 				break;
-			case 39: // right arrow (stop rotate ship right)
+			case "ArrowRight": // right arrow (stop rotate ship right)
 				this.rotationSpeed = 0;
 				break;
-			case 32: // space bar (shoot laswer)
+			case "Spacebar":
+			case " ": // space bar (shoot laser)
 				this.canShoot = true;
 				break;
 		}
+	}
+
+	shootLaser() {
+		// create laser
+		if(this.canShoot && this.lasers.length < CONST.LASER_MAX) {
+			this.lasers.push(new Laser ({ // from nose of ship
+				x: this.xPosition + 4 / 3 * this.radius * Math.cos(this.angle),
+				y: this.yPosition - 4 / 3 * this.radius * Math.sin(this.angle),
+				angle: this.angle,
+				xv: this.thrust.x,
+				yv: this.thrust.y
+			}));
+
+			fxLaser.play();
+		}
+
+		// prevent further shooting
+		this.canShoot = false;
 	}
 
 	update() {
@@ -110,6 +132,8 @@ class UserShip extends Ship {
 		} else if(this.yPosition > CONST.SCREEN_HEIGHT + this.radius) {
 			this.yPosition = 0 - this.radius;
 		}
+
+		this.lasers.forEach(l => l.update());
 	}
 
 	draw(canvas) {
@@ -135,7 +159,9 @@ class UserShip extends Ship {
 		if(CONST.SHOW_BOUNDING) {
 			canvas.drawCircle(this.xPosition, this.yPosition, this.radius, "lime", "");
 		}
-	}	
+
+		this.lasers.forEach(l => l.draw(canvas));
+	}
 	
 	drawThrust(canvas, x, y, a) {
 		// draw thruster
@@ -167,6 +193,14 @@ class UserShip extends Ship {
 		canvas.drawCircle(this.xPosition, this.yPosition, this.radius * 1.1, "", "orange");
 		canvas.drawCircle(this.xPosition, this.yPosition, this.radius * .8, "", "yellow");
 		canvas.drawCircle(this.xPosition, this.yPosition, this.radius * .5, "", "white");
+	}
+
+	clean() {
+		for (let i = this.lasers.length - 1; i >= 0; i--) {
+			if(!!this.lasers[i].deleted) {
+				this.lasers.splice(i, 1);
+			}
+		}
 	}
 }
 

@@ -27,6 +27,10 @@ class Ship extends GameElement {
 		super.draw(canvas);
 		canvas.drawIsoscelesTriangle(this.xPosition, this.yPosition, this.radius, this.angle, this.color, this.shipSize * .05);
 	}
+
+	clean() {
+		
+	}
 }
 
 export default Ship;

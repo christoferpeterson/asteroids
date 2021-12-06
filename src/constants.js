@@ -1,7 +1,7 @@
 export default {
 	FPS: 30, // frames per second
-	SCREEN_WIDTH: 640, // screen height in pixels
-	SCREEN_HEIGHT: 480, // screen height in pixels
+	SCREEN_WIDTH: 480, // screen height in pixels
+	SCREEN_HEIGHT: 640, // screen height in pixels
 	SHIP_SIZE: 30, // ship radius in pixels
 	TURN_SPEED: Math.PI * 3 / 2, // ship turn speed in degrees per second
 	SHIP_THRUST: 5, // acceleration of ship in pixels per second per second
@@ -17,8 +17,6 @@ export default {
 	SHIP_INV_DUR: 3, // ship's invulnerability duration in seconds
 	SHIP_BLINK_DUR: .1, // duration of ship's blink during invulnerability in seconds
 	LASER_MAX: 10, // max number of lasers on screen at once
-	LASER_SPD: 500, // speed of lasers in pixels per second
-	LASER_DIST: 0.6, // max distance laser can travel as fraction of screen width
 	LASER_EXPLODE_DUR: 0.1, // duration of laser's explosion in seconds
 	TEXT_FADE_TIME: 2.5, // text fade time in seconds
 	TEXT_SIZE: 40, // text font height in pixels
